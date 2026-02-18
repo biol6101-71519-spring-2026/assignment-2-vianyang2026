@@ -1,1 +1,29 @@
-c
+configfile: 'config/config.yaml'
+
+rule all:
+    input:
+        expand("results/qc/fastqc/{sample}_R1_fastqc.html", sample=config["samples"]),
+        expand("results/qc/fastqc/{sample}_R2_fastqc.html", sample=config["samples"]),
+        "results/qc/multiqc_report.html"
+
+rule fastqc:
+    input:
+        "data/fastq/{sample}_R1.fastq.gz",
+        "data/fastq/{sample}_R2.fastq.gz"
+    output:
+        "results/qc/fastqc/{sample}_R1_fastqc.html",
+        "results/qc/fastqc/{sample}_R2_fastqc.html"
+    log:
+        "logs/fastqc/{sample}.log"
+    shell:   
+        "fastqc {input} -o results/qc/fastqc > {log} 2>&1"
+rule multiqc:
+    input:
+        expand("results/qc/fastqc/{sample}_R1_fastqc.html", sample=config["samples"]),
+        expand("results/qc/fastqc/{sample}_R2_fastqc.html", sample=config["samples"])
+    output:
+        "results/qc/multiqc_report.html"
+    log:
+        "logs/multiqc/multiqc.log"
+    shell:
+        "multiqc results/qc/fastqc -o results/qc >{log} 2>&1" 
